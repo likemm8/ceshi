@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-touch-fullscreen" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <title>页面加载中</title>
+  <style>
+    #container {
+      width: 100px;
+      height: 100px;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      animation: rotate-move 2s ease-in-out infinite;
+    }
+
+    .dot {
+      width: 15px;
+      height: 15px;
+      border-radius: 50%;
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      margin: auto;
+    }
+
+    .dot-1 {
+      background-color: #ffe386;
+      animation: dot-1-move 2s ease infinite;
+    }
+
+    .dot-2 {
+      background-color: #10beae;
+      animation: dot-2-move 2s ease infinite;
+    }
+
+    .dot-3 {
+      background-color: #f74d75;
+      animation: dot-3-move 2s ease infinite;
+    }
+
+    iframe {
+      width: 100%;
+      height: 100%;
+      position: fixed;
+      left: 0;
+      top: 0;
+      border: none;
+      z-index: 10;
+      display: none; /* 默认隐藏 */
+    }
+
+    @keyframes dot-1-move {
+      20% { transform: scale(1); }
+      45% { transform: translate(16px, 12px) scale(.45); }
+      80% { transform: translate(20px, 15px) scale(.45); }
+      100% { transform: translateY(0) scale(1); }
+    }
+
+    @keyframes dot-2-move {
+      20% { transform: scale(1); }
+      45% { transform: translate(-16px, 12px) scale(.45); }
+      80% { transform: translate(-20px, 15px) scale(.45); }
+      100% { transform: translateY(0) scale(1); }
+    }
+
+    @keyframes dot-3-move {
+      20% { transform: scale(1); }
+      45% { transform: translateY(-18px) scale(.45); }
+      80% { transform: translateY(-25px) scale(.45); }
+      100% { transform: translateY(0) scale(1); }
+    }
+
+    @keyframes rotate-move {
+      55% { transform: translate(-50%, -50%) rotate(0); }
+      100% { transform: translate(-50%, -50%) rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <!-- 加载动画容器 -->
+  <div id="container">
+    <div class="dot dot-1"></div>
+    <div class="dot dot-2"></div>
+    <div class="dot dot-3"></div>
+  </div>
+
+  <!-- iframe容器 -->
+  <iframe id="contentFrame"></iframe>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // 1. 解析URL参数
+      const urlParams = new URLSearchParams(window.location.search);
+      const encodedParam = urlParams.get('c');
+      
+      if (encodedParam) {
+        try {
+          // 2. Base64解码
+          const trueUrl = atob(encodedParam);
+          
+          // 3. 验证URL格式
+          if (trueUrl.startsWith('http')) {
+            const frame = document.getElementById('contentFrame');
+            const container = document.getElementById('container');
+            
+            // 4. 设置1.5秒延迟隐藏动画
+            setTimeout(() => {
+              container.style.display = 'none';
+              frame.style.display = 'block';
+            }, 1500);
+            
+            // 5. 加载目标页面
+            frame.src = trueUrl;
+            
+            // 6. 绑定滚轮事件处理
+            frame.onload = function() {
+              try {
+                bindMouseWheel(this);
+              } catch (e) {
+                console.warn('跨域限制:', e.message);
+              }
+            };
+          }
+        } catch (e) {
+          console.error('参数解析错误:', e);
+        }
+      }
+    });
+
+    // 滚轮事件处理函数
+    function bindMouseWheel(iframe) {
+      const isFirefox = navigator.userAgent.includes('Firefox');
+      const doc = iframe.contentDocument || iframe.contentWindow.document;
+      
+      const handler = function(e) {
+        e.preventDefault();
+        const delta = isFirefox ? -e.detail : e.wheelDelta;
+        window.scrollBy(0, delta > 0 ? -50 : 50);
+      };
+      
+      if (isFirefox) {
+        doc.addEventListener('DOMMouseScroll', handler);
+      } else {
+        doc.onmousewheel = handler;
+      }
+    }
+  </script>
+</body>
+</html>
